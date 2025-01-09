@@ -1,5 +1,5 @@
 from enum import Enum
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Dict, Any, Optional, Union, List, Literal, BinaryIO
 from io import BufferedReader, BytesIO, IOBase
 
@@ -91,7 +91,12 @@ class StorageRequestType(str, Enum):
     SEARCH = "search"
 
 class BaseStorageRequest(BaseModel):
-    request_type: StorageRequestType
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True
+    )
+    request_type: StorageRequestType = Field(
+        json_schema_extra={"literal": True}
+    )
     storage_type: StorageType
     path: str
     options: Union[Dict[str, Any], DatabaseReadOptions] = Field(default_factory=dict)
@@ -105,31 +110,52 @@ class BaseStorageRequest(BaseModel):
         model_dict['request_type'] = self.request_type.value
         return model_dict
 
-    class Config:
-        arbitrary_types_allowed = True
-
 class CreateStorageRequest(BaseStorageRequest):
-    request_type: StorageRequestType = Field(default=StorageRequestType.CREATE, literal=True)
+    request_type: StorageRequestType = Field(
+        default=StorageRequestType.CREATE,
+        json_schema_extra={"literal": True}
+    )
     data: Optional[Dict[str, Any]] = None
-    file: Optional[IOBase] = None 
+    file: Optional[IOBase] = None
 
 class ReadStorageRequest(BaseStorageRequest):
-    request_type: StorageRequestType = Field(default=StorageRequestType.READ, literal=True)
+    request_type: StorageRequestType = Field(
+        default=StorageRequestType.READ,
+        json_schema_extra={"literal": True}
+    )
 
 class UpdateStorageRequest(BaseStorageRequest):
-    request_type: StorageRequestType = Field(default=StorageRequestType.UPDATE, literal=True)
+    request_type: StorageRequestType = Field(
+        default=StorageRequestType.UPDATE,
+        json_schema_extra={"literal": True}
+    )
     data: Union[Dict[str, Any], bytes, BinaryIO]
 
 class DeleteStorageRequest(BaseStorageRequest):
-    request_type: StorageRequestType = Field(default=StorageRequestType.DELETE, literal=True)
+    request_type: StorageRequestType = Field(
+        default=StorageRequestType.DELETE,
+        json_schema_extra={"literal": True}
+    )
     condition: Optional[Dict[str, Any]] = None
 
 class ListStorageRequest(BaseStorageRequest):
-    request_type: StorageRequestType = Field(default=StorageRequestType.LIST, literal=True)
+    request_type: StorageRequestType = Field(
+        default=StorageRequestType.LIST,
+        json_schema_extra={"literal": True}
+    )
 
 class SearchStorageRequest(BaseStorageRequest):
-    request_type: StorageRequestType = Field(default=StorageRequestType.SEARCH, literal=True)
+    request_type: StorageRequestType = Field(
+        default=StorageRequestType.SEARCH,
+        json_schema_extra={"literal": True}
+    )
     query: Any
     query_type: str = "text"
     limit: Optional[int] = None
+
+class StorageRequest(BaseModel):
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True
+    )
+    request_type: str = Field(json_schema_extra={"literal": True})
 

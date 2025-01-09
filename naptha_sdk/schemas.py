@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Dict, List, Optional, Union, Any
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from naptha_sdk.storage.schemas import StorageType
 
 class User(BaseModel):
@@ -13,28 +13,19 @@ class NodeServer(BaseModel):
     node_id: str
 
 class NodeConfig(BaseModel):
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True
+    )
     id: str
     owner: str
     public_key: str
-    ip: str = Field(default="localhost")
-    server_type: str = Field(default="ws")
-    http_port: int = Field(default=7001)
-    num_servers: int = Field(default=1)
-    provider_types: List[str] = Field(default=["models", "storage", "modules"])
-    servers: List[NodeServer]
+    ip: str
+    http_port: int
+    server_type: str
+    servers: List[str]
     models: List[str]
     docker_jobs: bool
-    ports: Optional[List[int]] = None
-    routing_type: Optional[str] = Field(default="direct")
-    routing_url: Optional[str] = Field(default=None)
-    num_gpus: Optional[int] = Field(default=None)
-    arch: Optional[str] = Field(default=None)
-    os: Optional[str] = Field(default=None)
-    ram: Optional[int] = Field(default=None)
-    vram: Optional[int] = Field(default=None)
-
-    class Config:
-        allow_mutation = True
+    ports: List[int]
 
 class NodeConfigUser(BaseModel):
     ip: str
@@ -81,10 +72,13 @@ class EnvironmentConfig(BaseModel):
     environment_type: Optional[str] = None
 
 class KBConfig(BaseModel):
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True
+    )
     config_name: Optional[str] = None
     storage_type: StorageType
     path: str
-    schema: Dict[str, Any]
+    kb_schema: Dict[str, Any]
     options: Optional[Dict[str, Any]] = None
 
     def model_dict(self):
@@ -103,11 +97,11 @@ class DataGenerationConfig(BaseModel):
     default_filename: Optional[str] = None
 
 class ToolDeployment(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
     node: Union[NodeConfigUser, NodeConfig, Dict]
     name: Optional[str] = None
     module: Optional[Dict] = None
     config: Optional[ToolConfig] = None
-    data_generation_config: Optional[DataGenerationConfig] = None
 
 class KBDeployment(BaseModel):
     node: Union[NodeConfigUser, NodeConfig, Dict]
@@ -122,15 +116,19 @@ class KBDeployment(BaseModel):
         return model_dict
 
 class EnvironmentDeployment(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
     node: Union[NodeConfigUser, NodeConfig, Dict]
     name: Optional[str] = None
     module: Optional[Dict] = None
     config: Optional[EnvironmentConfig] = None
 
 class AgentDeployment(BaseModel):
-    node: Union[NodeConfigUser, NodeConfig, Dict]
-    name: Optional[str] = None
-    module: Optional[Dict] = None
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True
+    )
+    node: NodeConfig
+    module: Dict[str, Any]
+    name: str
     config: Optional[AgentConfig] = None
     data_generation_config: Optional[DataGenerationConfig] = None
     tool_deployments: Optional[List[ToolDeployment]] = None
@@ -147,6 +145,13 @@ class OrchestratorDeployment(BaseModel):
     kb_deployments: Optional[List[KBDeployment]] = None
 
 class DockerParams(BaseModel):
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        validate_assignment=True,
+        json_encoders={
+            datetime: lambda v: v.isoformat(),
+        }
+    )
     docker_image: str
     docker_command: Optional[str] = ""
     docker_num_gpus: Optional[int] = 0
@@ -157,15 +162,6 @@ class DockerParams(BaseModel):
     docker_output_dir: Optional[str] = None
     save_location: str = "node"
 
-    class Config:
-        allow_mutation = True
-
-    class Config:
-        allow_mutation = True
-        json_encoders = {
-            datetime: lambda v: v.isoformat(),
-        }
-
     def model_dict(self):
         model_dict = self.dict()
         for key, value in model_dict.items():
@@ -174,6 +170,13 @@ class DockerParams(BaseModel):
         return model_dict
 
 class AgentRun(BaseModel):
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        validate_assignment=True,
+        json_encoders={
+            datetime: lambda v: v.isoformat(),
+        }
+    )
     consumer_id: str
     inputs: Optional[Union[Dict, BaseModel, DockerParams]] = None
     deployment: AgentDeployment
@@ -191,11 +194,6 @@ class AgentRun(BaseModel):
     duration: Optional[float] = None
     input_schema_ipfs_hash: Optional[str] = None
     signature: str
-    class Config:
-        allow_mutation = True
-        json_encoders = {
-            datetime: lambda v: v.isoformat(),
-        }
 
     def model_dict(self):
         model_dict = self.dict()
@@ -211,6 +209,10 @@ class AgentRun(BaseModel):
         return model_dict
 
 class AgentRunInput(BaseModel):
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        validate_assignment=True
+    )
     consumer_id: str
     inputs: Optional[Union[Dict, BaseModel, DockerParams]] = None
     deployment: AgentDeployment
