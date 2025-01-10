@@ -92,7 +92,13 @@ class StorageRequestType(str, Enum):
 
 class BaseStorageRequest(BaseModel):
     model_config = ConfigDict(
-        arbitrary_types_allowed=True
+        json_schema_extra={
+            "example": {
+                "storage_type": "db",
+                "path": "users",
+                "options": {}
+            }
+        }
     )
     request_type: StorageRequestType = Field(
         json_schema_extra={"literal": True}
@@ -111,6 +117,16 @@ class BaseStorageRequest(BaseModel):
         return model_dict
 
 class CreateStorageRequest(BaseStorageRequest):
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        json_schema_extra={
+            "example": {
+                "storage_type": "db",
+                "path": "users",
+                "data": {"name": "test"}
+            }
+        }
+    )
     request_type: StorageRequestType = Field(
         default=StorageRequestType.CREATE,
         json_schema_extra={"literal": True}
@@ -119,12 +135,23 @@ class CreateStorageRequest(BaseStorageRequest):
     file: Optional[IOBase] = None
 
 class ReadStorageRequest(BaseStorageRequest):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
     request_type: StorageRequestType = Field(
         default=StorageRequestType.READ,
         json_schema_extra={"literal": True}
     )
 
 class UpdateStorageRequest(BaseStorageRequest):
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        json_schema_extra={
+            "example": {
+                "storage_type": "db",
+                "path": "users",
+                "data": {"name": "updated"}
+            }
+        }
+    )
     request_type: StorageRequestType = Field(
         default=StorageRequestType.UPDATE,
         json_schema_extra={"literal": True}
@@ -132,6 +159,7 @@ class UpdateStorageRequest(BaseStorageRequest):
     data: Union[Dict[str, Any], bytes, BinaryIO]
 
 class DeleteStorageRequest(BaseStorageRequest):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
     request_type: StorageRequestType = Field(
         default=StorageRequestType.DELETE,
         json_schema_extra={"literal": True}
@@ -155,7 +183,14 @@ class SearchStorageRequest(BaseStorageRequest):
 
 class StorageRequest(BaseModel):
     model_config = ConfigDict(
-        arbitrary_types_allowed=True
+        arbitrary_types_allowed=True,
+        json_schema_extra={
+            "example": {
+                "request_type": "create",
+                "storage_type": "db",
+                "path": "users"
+            }
+        }
     )
     request_type: str = Field(json_schema_extra={"literal": True})
 

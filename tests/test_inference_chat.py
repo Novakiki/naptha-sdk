@@ -1,11 +1,16 @@
 import asyncio
+import pytest
 
 from pyexpat.errors import messages
 from naptha_sdk.schemas import ChatCompletionRequest, ChatMessage
 from pydantic import BaseModel
 from naptha_sdk.client.naptha import Naptha
 
-async def test_inference_chat_endpoint(naptha: Naptha):
+pytestmark = pytest.mark.asyncio  # Add module-level marker
+
+@pytest.mark.asyncio
+async def test_inference_chat_endpoint(naptha):
+    client = await naptha  # Await the fixture
     chat_request = ChatCompletionRequest(
         model="gpt-4o-mini",
         messages=[
@@ -15,12 +20,12 @@ async def test_inference_chat_endpoint(naptha: Naptha):
         ],
         temperature=0.8
     )
-
-    output = await naptha.inference_client.run_inference(chat_request)
+    output = await client.inference_client.run_inference(chat_request)
     print(output['choices'][0]['message']['content'])
 
 
-async def test_inference_chat_structured_output(naptha: Naptha):
+async def test_inference_chat_structured_output(naptha):
+    client = await naptha  # Await the fixture
     class User(BaseModel):
         id: str
         name: str
@@ -49,7 +54,7 @@ async def test_inference_chat_structured_output(naptha: Naptha):
         response_format=schema
     )
 
-    output = await naptha.inference_client.run_inference(chat_request)
+    output = await client.inference_client.run_inference(chat_request)
     output = output['choices'][0]['message']['content']
     user_output = User.model_validate_json(output)
     print(user_output)

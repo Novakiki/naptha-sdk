@@ -14,7 +14,10 @@ class NodeServer(BaseModel):
 
 class NodeConfig(BaseModel):
     model_config = ConfigDict(
-        arbitrary_types_allowed=True
+        validate_assignment=True,
+        json_encoders={
+            datetime: lambda v: v.isoformat(),
+        }
     )
     id: str
     owner: str
